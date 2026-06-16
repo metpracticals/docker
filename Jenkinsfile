@@ -1,12 +1,14 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_HUB_USER  = 'docksep30'
+        environment {
+        // Explicitly defining the global public endpoint
+        DOCKER_HUB_USER  = 'registry-1.docker.io/docksep30' 
         IMAGE_NAME       = 'html-app'
         IMAGE_TAG        = "${BUILD_NUMBER}"
         DOCKER_HUB_CREDS = 'docker-hub-credentials-id'
     }
+
 
     stages {
         // STAGE 1: Pull latest code from Git
