@@ -1,7 +1,7 @@
 {
   "tagname-lowercase": true,
   "attr-value-not-empty": false,
-  "doctype-first": true,
+  "doctype-first": false,
   "id-unique": true,
   "src-not-empty": true
 }
