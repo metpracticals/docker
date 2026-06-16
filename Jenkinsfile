@@ -2,11 +2,9 @@ pipeline {
     agent any
 
     environment {
-        // Replace with your Docker Hub username and repository name
-        DOCKER_HUB_USER = 'docksep30'
-        IMAGE_NAME      = 'html-app'
-        IMAGE_TAG       = "${BUILD_NUMBER}"
-        // The ID of the credentials you save in Jenkins for Docker Hub
+        DOCKER_HUB_USER  = 'docksep30' // Replace with your username
+        IMAGE_NAME       = 'html-app'
+        IMAGE_TAG        = "${BUILD_NUMBER}"
         DOCKER_HUB_CREDS = 'docker-hub-credentials-id'
     }
 
@@ -14,7 +12,6 @@ pipeline {
         // STAGE 1: Pull latest code from Git
         stage('Pull Code') {
             steps {
-                // 'checkout scm' automatically pulls the exact commit that triggered the build
                 checkout scm
             }
         }
@@ -23,9 +20,9 @@ pipeline {
         stage('Unit Tests') {
             steps {
                 script {
-                    // Installs htmlhint locally and runs it against all HTML files
-                    sh 'npm install htmlhint'
-                    sh './node_modules/.bin/htmlhint "**/*.html"'
+                    // Changed 'sh' to 'bat' for Windows
+                    bat 'npm install htmlhint'
+                    bat 'node_modules\\.bin\\htmlhint "**/*.html"'
                 }
             }
         }
@@ -35,8 +32,8 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image..."
-                    sh "docker build -t ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ."
-                    sh "docker tag ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_HUB_USER}/${IMAGE_NAME}:latest"
+                    bat "docker build -t %DOCKER_HUB_USER%/%IMAGE_NAME%:%IMAGE_TAG% ."
+                    bat "docker tag %DOCKER_HUB_USER%/%IMAGE_NAME%:%IMAGE_TAG% %DOCKER_HUB_USER%/%IMAGE_NAME%:latest"
                 }
             }
         }
@@ -45,11 +42,12 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    // Securely logs into Docker Hub using Jenkins Credentials Provider
+                    // Securely logs into Docker Hub using Jenkins Credentials
                     withCredentials([usernamePassword(credentialsId: "${DOCKER_HUB_CREDS}", usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        sh "echo '${PASS}' | docker login -u '${USER}' --password-stdin"
-                        sh "docker push ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
-                        sh "docker push ${DOCKER_HUB_USER}/${IMAGE_NAME}:latest"
+                        // Windows uses %VARIABLE% syntax instead of $VARIABLE
+                        bat "echo %PASS% | docker login -u %USER% --password-stdin"
+                        bat "docker push %DOCKER_HUB_USER%/%IMAGE_NAME%:%IMAGE_TAG%"
+                        bat "docker push %DOCKER_HUB_USER%/%IMAGE_NAME%:latest"
                     }
                 }
             }
@@ -59,8 +57,8 @@ pipeline {
     post {
         always {
             echo "Cleaning up local Docker images..."
-            sh "docker rmi ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} || true"
-            sh "docker rmi ${DOCKER_HUB_USER}/${IMAGE_NAME}:latest || true"
+            bat "docker rmi %DOCKER_HUB_USER%/%IMAGE_NAME%:%IMAGE_TAG% || exit 0"
+            bat "docker rmi %DOCKER_HUB_USER%/%IMAGE_NAME%:latest || exit 0"
         }
         success {
             echo "Pipeline completed successfully!"
