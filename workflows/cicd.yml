@@ -1,44 +1,58 @@
-name: HTML CI-CD Pipeline
+pipeline {
+    agent any
 
-on:
-  push:
-    branches:
-      - main
+    environment {
+        IMAGE_NAME = "your-dockerhub-username/html-app"
+    }
 
-jobs:
-  pipeline:
+    stages {
 
-    runs-on: ubuntu-latest
+        stage('Checkout Code') {
+            steps {
+                // Stage 1: Pull latest code from remote Git
+                git branch: 'main', url: 'https://github.com/your-username/your-repo.git'
+            }
+        }
 
-    steps:
+        stage('Install & Test HTML') {
+            steps {
+                // Stage 2: Install HTML validator and run tests
+                sh '''
+                    npm init -y
+                    npm install htmlhint --save-dev
+                    npx htmlhint "**/*.html"
+                '''
+            }
+        }
 
-      # Stage 1: Pull latest code from remote Git
-      - name: Checkout source code
-        uses: actions/checkout@v4
+        stage('Build Docker Image') {
+            steps {
+                // Stage 3: Build Docker image
+                sh "docker build -t $IMAGE_NAME:latest ."
+            }
+        }
 
-      # Stage 2: Setup runtime for tests
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+        stage('Push to Docker Hub') {
+            steps {
+                // Stage 4: Login and push image
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds',
+                                                 usernameVariable: 'DOCKER_USER',
+                                                 passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push $IMAGE_NAME:latest
+                    '''
+                }
+            }
+        }
+    }
 
-      - name: Install dependencies
-        run: npm install
-
-      # Stage 2: Run HTML validation tests
-      - name: Run HTML tests
-        run: npm test
-
-      # Stage 3: Build Docker image
-      - name: Build Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/html-app:latest .
-
-      # Stage 4: Login to Docker Hub
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      # Stage 4: Push Docker image
-      - name: Push Docker image
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/html-app:latest
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
