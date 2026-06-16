@@ -3,7 +3,7 @@ pipeline {
 
         environment {
         // Explicitly defining the global public endpoint
-        DOCKER_HUB_USER  = 'registry-1.docker.io/docksep30' 
+        DOCKER_HUB_USER  = 'docksep30' 
         IMAGE_NAME       = 'html-app'
         IMAGE_TAG        = "${BUILD_NUMBER}"
         DOCKER_HUB_CREDS = 'docker-hub-credentials-id'
