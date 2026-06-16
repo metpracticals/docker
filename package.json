@@ -1,5 +1,7 @@
 {
-  "scripts": {
-    "test": "htmlhint \"**/*.html\""
-  }
+  "tagname-lowercase": true,
+  "attr-value-not-empty": false,
+  "doctype-first": true,
+  "id-unique": true,
+  "src-not-empty": true
 }
