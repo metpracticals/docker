@@ -39,18 +39,20 @@ pipeline {
         }
 
         // STAGE 4: Push the docker image to Docker Hub
+                // STAGE 4: Push the docker image to Docker Hub
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    // Securely logs into Docker Hub using Jenkins Credentials
-                    withCredentials([usernamePassword(credentialsId: "${DOCKER_HUB_CREDS}", usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        // Windows uses %VARIABLE% syntax instead of $VARIABLE
-                        bat "echo %PASS% | docker login -u %USER% --password-stdin"
+                    withCredentials([usernamePassword(credentialsId: "${DOCKER_HUB_CREDS}", usernameVariable: 'DUSER', passwordVariable: 'DPASS')]) {
+                        // The quotes around %DPASS% protect special characters in Windows CMD
+                        bat 'docker login -u "%DUSER%" -p "%DPASS%"'
                         bat "docker push %DOCKER_HUB_USER%/%IMAGE_NAME%:%IMAGE_TAG%"
                         bat "docker push %DOCKER_HUB_USER%/%IMAGE_NAME%:latest"
                     }
                 }
             }
+        }
+
         }
     }
 
