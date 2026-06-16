@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USER  = 'docksep30' // Replace with your username
+        DOCKER_HUB_USER  = 'docksep30'
         IMAGE_NAME       = 'html-app'
         IMAGE_TAG        = "${BUILD_NUMBER}"
         DOCKER_HUB_CREDS = 'docker-hub-credentials-id'
@@ -20,7 +20,6 @@ pipeline {
         stage('Unit Tests') {
             steps {
                 script {
-                    // Changed 'sh' to 'bat' for Windows
                     bat 'npm install htmlhint'
                     bat 'node_modules\\.bin\\htmlhint "**/*.html"'
                 }
@@ -39,22 +38,19 @@ pipeline {
         }
 
         // STAGE 4: Push the docker image to Docker Hub
-                // STAGE 4: Push the docker image to Docker Hub
         stage('Push to Docker Hub') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: "${DOCKER_HUB_CREDS}", usernameVariable: 'DUSER', passwordVariable: 'DPASS')]) {
-                        // The quotes around %DPASS% protect special characters in Windows CMD
+                        // Quotes securely wrap special characters on Windows CMD
                         bat 'docker login -u "%DUSER%" -p "%DPASS%"'
                         bat "docker push %DOCKER_HUB_USER%/%IMAGE_NAME%:%IMAGE_TAG%"
                         bat "docker push %DOCKER_HUB_USER%/%IMAGE_NAME%:latest"
                     }
                 }
             }
-        }
-
-        }
-    }
+        } // Stage 4 ends here cleanly
+    } // Stages block ends here cleanly
 
     post {
         always {
